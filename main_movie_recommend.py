@@ -8,7 +8,9 @@ import pandas as pd
 r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
 ratings = pd.read_csv('./metadata/ml-1m/ratings.dat', sep='::', names=r_cols,
  encoding='latin-1')
-# Getting number of users and movies from the dataset.
+
+# Getting number of users and movies from the dataset. https://grouplens.org/datasets/book-crossing/
+# https://grouplens.org/datasets/movielens/
 n_users = ratings.user_id.unique().tolist()
 n_movies = ratings.movie_id.unique().tolist()
 print(type(n_users))
@@ -67,3 +69,33 @@ X_raw = np.delete(data, movie_id_mapping[movie_id_most], axis=1)
 Y_raw = data[:, movie_id_mapping[movie_id_most]]
 
 #clean the test data i.e. remove samples without ratings
+X = X_raw[Y_raw > 0]
+Y = Y_raw[Y_raw > 0]
+
+print('Shape of X:', X.shape)
+print('Shape of Y:', Y.shape)
+# Visualize the Target movie rating distribution after cleaning
+display_distribution(Y)
+
+# Based on the distribution we decide above which rating we say the movie is being recommended or
+# I recommend this movie because a lot of people rated it (Note: we don't know what they rated or their comments all about)
+
+recommend = 3
+Y[Y <= recommend] = 0 # Not the Best and Not recommend it
+Y[Y > recommend] = 1 # Best and recommend it
+n_pos = (Y == 1).sum()
+n_neg = (Y == 0).sum()
+# Note: Analyse the label distribution and see how balanced or in balanced it is.
+print(f'{n_pos} positive samples and {n_neg} negative samples')
+
+# SPLIT the dataset
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size=0.2,random_state=42)
+
+#see test and train sizes
+
+print(len(Y_train), len(Y_test))
+
+
