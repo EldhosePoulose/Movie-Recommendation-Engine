@@ -99,3 +99,25 @@ X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size=0.2,random_sta
 print(len(Y_train), len(Y_test))
 
 
+# Naïve Bayes
+from sklearn.naive_bayes import MultinomialNB
+
+clf = MultinomialNB(alpha = 1.0, fit_prior=True)
+# Multinomial since we have 5 classes
+# We now train the NB model using our train data and label using fit method
+clf.fit(X_train, Y_train)
+
+# for showing the prediction probabilities: we use predict_prob method and to see the prediction: predict method
+pred_prob = clf.predict_proba(X_test)
+print("Predicted Probabilities [scikit-learn]: \n", pred_prob[0:10])
+
+pred = clf.predict(X_test)
+print("Prediction [scikit-learn]: \n", pred[:10])
+
+# Classification Accuracy
+
+accuracy = clf.score(X_test, Y_test)
+print(f'The accuracy is: {accuracy*100:.1f}%')
+
+
+
