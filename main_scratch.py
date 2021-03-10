@@ -1,3 +1,14 @@
+"""
+We begin with a toy example
+            ID  |   m1  /   m2  /   m3  /   User Interest (Yes/No or Y/N)
+
+Train Data: 1       0       1       1       Y
+            2       0       0       1       N
+            3       0       0       0       Y
+            4       1       1       0       Y
+Test Data:  5       1       1       0       ?
+"""
+
 import numpy as np
 X_train= np.array([
     [0,1,1],
