@@ -1,3 +1,5 @@
+# Self Learning: 10.03.2021
+
 import numpy as np
 from collections import defaultdict
 data_path ="./metadata/ml-1m/ratings.dat"
@@ -120,4 +122,12 @@ accuracy = clf.score(X_test, Y_test)
 print(f'The accuracy is: {accuracy*100:.1f}%')
 
 
+## EVALUATING CLASSIFICATION PERFORMANCE
+# Confusion Matrix
+# Precision
+# Recall
+# F1 Score
+# Area Under the Curve (AUC)
+
+# Tuning Model using Cross-Validation
 
