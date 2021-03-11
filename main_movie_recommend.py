@@ -113,8 +113,8 @@ clf.fit(X_train, Y_train)
 pred_prob = clf.predict_proba(X_test)
 print("Predicted Probabilities [scikit-learn]: \n", pred_prob[0:10])
 
-pred = clf.predict(X_test)
-print("Prediction [scikit-learn]: \n", pred[:10])
+prediction = clf.predict(X_test)
+print("Prediction [scikit-learn]: \n", prediction[:10])
 
 # Classification Accuracy
 
@@ -123,11 +123,30 @@ print(f'The accuracy is: {accuracy*100:.1f}%')
 
 
 ## EVALUATING CLASSIFICATION PERFORMANCE
+
 # Confusion Matrix
+from sklearn.metrics import confusion_matrix
+print(confusion_matrix(Y_test, prediction, labels=[0,1])) # prediction variable used from above
+
+#
+from sklearn.metrics import precision_score, recall_score, f1_score
 # Precision
+# precision_score(Y_test, prediction, pos_label=1)
 # Recall
+# recall_score(Y_test, prediction, pos_label=1)
 # F1 Score
+# f1_score(Y_test, prediction, pos_label=1)
+# f1_score(Y_test, prediction, pos_label=0) # negative/dislike class '0'
+
+from sklearn.metrics import classification_report
+report = classification_report(Y_test, prediction)
+print(report)
+
 # Area Under the Curve (AUC)
+
+
+
+
 
 # Tuning Model using Cross-Validation
 
