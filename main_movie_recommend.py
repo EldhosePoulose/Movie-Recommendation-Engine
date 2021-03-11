@@ -2,14 +2,15 @@
 
 import numpy as np
 from collections import defaultdict
-data_path ="./metadata/ml-1m/ratings.dat"
+
+data_path = "./metadata/ml-1m/ratings.dat"
 
 import pandas as pd
 
 # Reading ratings dataset into a pandas dataframe object.
 r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
 ratings = pd.read_csv('./metadata/ml-1m/ratings.dat', sep='::', names=r_cols,
- encoding='latin-1')
+                      encoding='latin-1')
 
 # Getting number of users and movies from the dataset. https://grouplens.org/datasets/book-crossing/
 # https://grouplens.org/datasets/movielens/
@@ -20,9 +21,9 @@ print(type(n_movies))
 print('Number of Users: {}'.format(len(n_users)))
 print('Number of Movies: {}'.format(len(n_movies)))
 
+
 # function to preprocess the ratings data
 def load_rating_data(data_path, n_users, n_movies):
-
     """
     We use this function to load the ratings and return the number of ratings for each movie and movie_id index mapping
     :param data_path: Path of the dataset
@@ -36,7 +37,7 @@ def load_rating_data(data_path, n_users, n_movies):
     data = np.zeros([len(n_users), len(n_movies)], dtype=np.float)
     movie_id_mapping = {}
     movie_n_rating = defaultdict(int)
-    with open(data_path,'r') as file:
+    with open(data_path, 'r') as file:
         for line in file.readlines()[1:]:
             user_id, movie_id, rating, _ = line.split("::")
             user_id = int(user_id) - 1
@@ -48,13 +49,16 @@ def load_rating_data(data_path, n_users, n_movies):
                 movie_n_rating[movie_id] += 1
     return data, movie_n_rating, movie_id_mapping
 
+
 data, movie_n_rating, movie_id_mapping = load_rating_data(data_path, n_users, n_movies)
 
-#data distribution
+
+# data distribution
 def display_distribution(data):
     values, counts = np.unique(data, return_counts=True)
     for value, count in zip(values, counts):
         print(f'Number of rating {int(value)}: {count}')
+
 
 display_distribution(data)
 
@@ -70,7 +74,7 @@ print(f'Movie ID {movie_id_most} has {n_rating_most} ratings.')
 X_raw = np.delete(data, movie_id_mapping[movie_id_most], axis=1)
 Y_raw = data[:, movie_id_mapping[movie_id_most]]
 
-#clean the test data i.e. remove samples without ratings
+# clean the test data i.e. remove samples without ratings
 X = X_raw[Y_raw > 0]
 Y = Y_raw[Y_raw > 0]
 
@@ -83,8 +87,8 @@ display_distribution(Y)
 # I recommend this movie because a lot of people rated it (Note: we don't know what they rated or their comments all about)
 
 recommend = 3
-Y[Y <= recommend] = 0 # Not the Best and Not recommend it
-Y[Y > recommend] = 1 # Best and recommend it
+Y[Y <= recommend] = 0  # Not the Best and Not recommend it
+Y[Y > recommend] = 1  # Best and recommend it
 n_pos = (Y == 1).sum()
 n_neg = (Y == 0).sum()
 # Note: Analyse the label distribution and see how balanced or in balanced it is.
@@ -94,24 +98,23 @@ print(f'{n_pos} positive samples and {n_neg} negative samples')
 
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size=0.2,random_state=42)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
-#see test and train sizes
+# see test and train sizes
 
 print(len(Y_train), len(Y_test))
-
 
 # Naïve Bayes
 from sklearn.naive_bayes import MultinomialNB
 
-clf = MultinomialNB(alpha = 1.0, fit_prior=True)
+clf = MultinomialNB(alpha=1.0, fit_prior=True)
 # Multinomial since we have 5 classes
 # We now train the NB model using our train data and label using fit method
 clf.fit(X_train, Y_train)
 
 # for showing the prediction probabilities: we use predict_prob method and to see the prediction: predict method
-pred_prob = clf.predict_proba(X_test)
-print("Predicted Probabilities [scikit-learn]: \n", pred_prob[0:10])
+prediction_prob = clf.predict_proba(X_test)
+print("Predicted Probabilities [scikit-learn]: \n", prediction_prob[0:10])
 
 prediction = clf.predict(X_test)
 print("Prediction [scikit-learn]: \n", prediction[:10])
@@ -119,14 +122,15 @@ print("Prediction [scikit-learn]: \n", prediction[:10])
 # Classification Accuracy
 
 accuracy = clf.score(X_test, Y_test)
-print(f'The accuracy is: {accuracy*100:.1f}%')
-
+print(f'The accuracy is: {accuracy * 100:.1f}%')
 
 ## EVALUATING CLASSIFICATION PERFORMANCE
+# Date: 11.03.2020
 
 # Confusion Matrix
 from sklearn.metrics import confusion_matrix
-print(confusion_matrix(Y_test, prediction, labels=[0,1])) # prediction variable used from above
+
+print(confusion_matrix(Y_test, prediction, labels=[0, 1]))  # prediction variable used from above
 
 #
 from sklearn.metrics import precision_score, recall_score, f1_score
@@ -139,14 +143,51 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 # f1_score(Y_test, prediction, pos_label=0) # negative/dislike class '0'
 
 from sklearn.metrics import classification_report
+
 report = classification_report(Y_test, prediction)
 print(report)
 
 # Area Under the Curve (AUC)
 
+pos_prob = prediction_prob[:, 1]
+thresholds = np.arange(0.0, 1.1, 0.05)
+true_pos, false_pos = [0] * len(thresholds), [0] * len(thresholds)
+for pred, y in zip(pos_prob, Y_test):
+    for i, threshold in enumerate(thresholds):
+        if pred >= threshold:
+            # if truth and prediction are both 1
+            if y == 1:
+                true_pos[i] += 1
+            # if truth is 0 while prediction is 1
+            else:
+                false_pos[i] += 1
+        else:
+            break
 
+n_pos_test = (Y_test == 1).sum()
+n_neg_test = (Y_test == 0).sum()
+print(f'{n_pos_test} positive test samples and {n_neg_test} negative test samples')
 
+true_pos_rate = [tp / n_pos_test for tp in true_pos]
+false_pos_rate = [fp / n_neg_test for fp in false_pos]
 
+import matplotlib.pyplot as plt
 
+plt.figure()
+lw = 2
+plt.plot(false_pos_rate, true_pos_rate, color="red", lw=lw)
+plt.plot([0,1], [0,1], color='blue', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate (fp)')
+plt.ylabel('True Positive Rate (tp)')
+plt.title("Receiver Operating Characteristics")
+plt.legend(loc="lower right")
+plt.show()
+
+#AUC Score
+from sklearn.metrics import roc_auc_score
+print(f' AUC-Score: {roc_auc_score(Y_test, pos_prob)}')
+
+# Date: 12.03.2020
 # Tuning Model using Cross-Validation
-
