@@ -176,18 +176,60 @@ import matplotlib.pyplot as plt
 plt.figure()
 lw = 2
 plt.plot(false_pos_rate, true_pos_rate, color="red", lw=lw)
-plt.plot([0,1], [0,1], color='blue', lw=lw, linestyle='--')
+plt.plot([0, 1], [0, 1], color='blue', lw=lw, linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate (fp)')
 plt.ylabel('True Positive Rate (tp)')
 plt.title("Receiver Operating Characteristics")
 plt.legend(loc="lower right")
-plt.show()
+#plt.show()
 
-#AUC Score
+# AUC Score
 from sklearn.metrics import roc_auc_score
+
 print(f' AUC-Score: {roc_auc_score(Y_test, pos_prob)}')
 
 # Date: 12.03.2020
 # Tuning Model using Cross-Validation
+
+# k-fold CV
+
+from sklearn.model_selection import StratifiedKFold
+
+k = 5
+k_fold = StratifiedKFold(n_splits=k)
+
+# alpha: Smoothing factor
+# fit_prior: whether to use prior tailored to the training data
+smoothing_factor_alpha = [1, 2, 3, 4, 5, 6]
+fit_prior_option = [True, False]
+auc_record = {}
+
+for train_indices, test_indices in k_fold.split(X, Y):
+    #print("Train:", train_indices, "Test:", test_indices)
+    X_train, X_test = X[train_indices], X[test_indices]
+    Y_train, Y_test = Y[train_indices], Y[test_indices]
+    for alpha in smoothing_factor_alpha:
+        if alpha not in auc_record:
+            auc_record[alpha] = {}
+        for fit_prior in fit_prior_option:
+            clf = MultinomialNB(alpha=alpha, fit_prior=fit_prior)
+            clf.fit(X_train, Y_train)
+            prediction_prob = clf.predict_proba(X_test)
+            pos_prob = prediction_prob[:, 1]
+            auc = roc_auc_score(Y_test, pos_prob)
+            auc_record[alpha][fit_prior] = auc + auc_record[alpha].get(fit_prior, 0.0)
+
+for smoothing, smoothing_record in auc_record.items():
+    for fit_prior, auc in smoothing_record.items():
+        print(f'        {smoothing}        {fit_prior}      {auc / k:.5f}')
+
+# see which smoothing and fit_prior or the hyper parameters are providing the best AUC value.
+# here it is AUC= 0.65823 for [2, False]
+# so we retrain the model with this values
+
+clf = MultinomialNB(alpha=2.0, fit_prior=False)
+clf.fit(X_train, Y_train)
+pos_prob = clf.predict_proba(X_test)[:, 1]
+print('AUC with the best model: ', roc_auc_score(Y_test, pos_prob))
