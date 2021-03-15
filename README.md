@@ -1,5 +1,5 @@
 # Movie-Recommendation-Engine
-In this repository we build Naïve Bayes Algorithm using several datasets.
+In this repository I will guide you all to build Naïve Bayes Algorithm using several datasets.
 Goal: Recommendation Engine (Movie, Book etc...)
 The datasets: 
 1. A sample dataset
